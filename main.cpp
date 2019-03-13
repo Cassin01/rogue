@@ -98,11 +98,17 @@ int main(void) {
     write(arr);
 
     ManipulateMe manipulate_me(arr, 0, 0);
+    manipulate_me.spawn_at_room(arr, maxlines, maxcols);
+    bool emulate_sucess_flag = false;
 
     while (true)
     {
         int ch = getch();
-        manipulate_me.erase_me();
+        /*
+        if (emulate_sucess_flag) {
+            manipulate_me.erase_me();
+        }
+        */
         if (ch == 'q' || ch == 'Q')
         {
             break;
@@ -110,7 +116,10 @@ int main(void) {
         else
         {
             manipulate_me.update_me(arr);
-            manipulate_me.emulate(ch, maxlines, maxcols);
+            emulate_sucess_flag = manipulate_me.emulate(ch, maxlines, maxcols, arr);
+            if (emulate_sucess_flag) {
+                manipulate_me.erase_me();
+            }
         }
     }
 
