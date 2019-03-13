@@ -12,20 +12,21 @@
 #include <iostream>
 
 #include "map.cpp"
+#include "manipulate_me.cpp"
 
 
 void init_curses() {
-  // Start curses mode
-  initscr();
+    // Start curses mode
+    initscr();
 
-  // CTRL-Z, CTRL-C が呼ばれた時にプログラムを強制終了させる。
-  cbreak();
+    // CTRL-Z, CTRL-C が呼ばれた時にプログラムを強制終了させる。
+    cbreak();
 
-  // Don't echo() while we getch
-  noecho();
+    // Don't echo() while we getch
+    noecho();
 
-  // The screen is cleared completely on the next call
-  clear();
+    // The screen is cleared completely on the next call
+    clear();
 }
 
 std::vector<std::vector<char> > init_arr(int maxlines, int maxcols)
@@ -76,38 +77,42 @@ void arr_debug(std::vector<std::vector<char> > arr) {
 }
 
 int main(void) {
-  // Generate seed
-  std::srand(std::time(nullptr));
+    // Generate seed
+    std::srand(std::time(nullptr));
 
-  // initialize curses
-  init_curses();
+    // initialize curses
+    init_curses();
 
-  // initialize triangle
-  int maxlines = LINES - 1;
-  int maxcols  = COLS  - 1;
+    // initialize triangle
+    int maxlines = LINES - 1;
+    int maxcols = COLS - 1;
 
-  GenerateMap generate_map;
+    GenerateMap generate_map;
 
+    std::vector<std::vector<char> > arr = init_arr(maxlines, maxcols);
 
-  std::vector<std::vector<char> > arr = init_arr(maxlines, maxcols);
+    arr = generate_map.split_space(arr, maxlines, maxcols, 4, 0, maxlines - 1, 0, maxcols - 1);
+    arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
+    arr = generate_map.make_p_hash(arr, maxlines, maxcols);
 
-  arr = generate_map.split_space(arr, maxlines, maxcols, 4, 0, maxlines - 1, 0, maxcols - 1);
-  arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
-  arr = generate_map.make_p_hash(arr, maxlines, maxcols);
+    write(arr);
 
-  write(arr);
-  while (true)
-  {
-      int ch = getch();
-      if (ch == 'q' || ch == 'Q')
-      {
-          break;
-      }
-      else
-      {
-          break;
-      }
-  }
+    ManipulateMe manipulate_me(arr, 0, 0);
 
-  determinate_curses(maxlines);
+    while (true)
+    {
+        int ch = getch();
+        manipulate_me.erase_me();
+        if (ch == 'q' || ch == 'Q')
+        {
+            break;
+        }
+        else
+        {
+            manipulate_me.update_me(arr);
+            manipulate_me.emulate(ch, maxlines, maxcols);
+        }
+    }
+
+    determinate_curses(maxlines);
 }

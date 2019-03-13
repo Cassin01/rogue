@@ -1,5 +1,8 @@
 #include <vector>
 
+// Rand
+#include <stdlib.h>
+
 class GenerateMap {
   public:
     std::vector<std::vector<char> > split_space(std::vector<std::vector<char> > arr, int maxlines, int maxcols, int minimum_room_size, int y_start, int y_end, int x_start, int x_end) {
@@ -47,38 +50,40 @@ class GenerateMap {
 
 
     std::vector<std::vector<char> > remove_unnecessary_root(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
-       // 列
-       for (int row_number = 0; row_number < maxcols; row_number++) {
+        // 列
+        for (int row_number = 0; row_number < maxcols; row_number++) {
           if (arr[0][row_number] == '#') {
             arr = remove_unnecessary_root_column(arr, maxlines, row_number);
           }
-       }
+      }
 
-       for (int row_number = 0; row_number < maxcols; row_number++) {
+      for (int row_number = 0; row_number < maxcols; row_number++) {
           if (arr[maxlines - 1][row_number] == '#') {
             arr = remove_unnecessary_root_column_from_down(arr, maxlines, row_number);
           }
-       }
+        }
 
-       // 行
-       for (int column_number = 0; column_number < maxlines; column_number++) {
+        // 行
+        for (int column_number = 0; column_number < maxlines; column_number++) {
           if (arr[column_number][0] == '#') {
             arr = remove_unnecessary_root_row(arr, maxcols, column_number);
           }
-       }
+        }
 
-       for (int column_number = 0; column_number < maxlines; column_number++) {
-          if (arr[column_number][maxcols - 1] == '#') {
+        for (int column_number = 0; column_number < maxlines; column_number++)
+        {
+          if (arr[column_number][maxcols - 1] == '#')
+          {
             arr = remove_unnecessary_root_row_from_right(arr, maxcols, column_number);
           }
-       }
-      return arr;
+        }
+        return arr;
     }
   private:
     // 横埋め
     std::vector<std::vector<char> > fill_horizontal(std::vector<std::vector<char> > arr, int y, int x_start, int x_end) {
       for (int i = x_start; i <= x_end; i++) {
-         arr[y][i] = '#';
+          arr[y][i] = '#';
       }
       return arr;
     }
@@ -86,7 +91,7 @@ class GenerateMap {
     // 縦埋め
     std::vector<std::vector<char> > fill_vertical(std::vector<std::vector<char> > arr, int x, int y_start, int y_end) {
       for (int i = y_start; i <= y_end; i++) {
-         arr[i][x] = '#';
+          arr[i][x] = '#';
       }
       return arr;
     }
