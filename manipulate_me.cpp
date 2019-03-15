@@ -18,6 +18,14 @@ class ManipulateMe
             my_previous_y = my_y;
         }
 
+        int get_my_x() {
+            return my_x;
+        }
+
+        int get_my_y() {
+            return my_y;
+        }
+
         void erase_me()
         {
             mvaddch(my_previous_y, my_previous_x, under_foot);
@@ -43,7 +51,7 @@ class ManipulateMe
         }
 
         bool on_land(std::vector<std::vector<char> > arr, int y, int x) {
-            if (arr[y][x] == '#' || arr[y][x] == '.') {
+            if (arr[y][x] == '#' || arr[y][x] == '.' || arr[y][x] == '+') {
                 return true;
             } else {
                 return false;
@@ -52,7 +60,7 @@ class ManipulateMe
 
         bool emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
             switch (ch) {
-                case 'h': // 左
+                case 'a': // 左
                     if (0 < my_x - 1 && on_land(arr, my_y, my_x - 1))
                     {
                         mvaddch(my_y, my_x, ' ');
@@ -64,7 +72,7 @@ class ManipulateMe
                         return false;
                     }
                     break;
-                case 'j': // 下
+                case 's': // 下
                     if (maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x))
                     {
                         mvaddch(my_y, my_x, ' ');
@@ -76,7 +84,7 @@ class ManipulateMe
                         return false;
                     }
                     break;
-                case 'k': // 上
+                case 'w': // 上
                     if (0 < my_y - 1 && on_land(arr, my_y - 1, my_x))
                     {
                         mvaddch(my_y, my_x, ' ');
@@ -88,7 +96,7 @@ class ManipulateMe
                         return false;
                     }
                     break;
-                case 'l': // 右
+                case 'd': // 右
                     if (maxcols > my_x + 1 && on_land(arr, my_y, my_x + 1))
                     {
                         mvaddch(my_y, my_x, ' ');

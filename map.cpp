@@ -5,36 +5,34 @@
 
 class GenerateMap {
   public:
-    std::vector<std::vector<char> > split_space(std::vector<std::vector<char> > arr, int maxlines, int maxcols, int minimum_room_size, int y_start, int y_end, int x_start, int x_end) {
+    std::vector<std::vector<char> > split_space(std::vector<std::vector<char> > arr, int maxlines, int maxcols, int minimum_space_size, int y_start, int y_end, int x_start, int x_end) {
       int r = std::rand() % 2;
 
       // 終了条件
       if (r == 0) {
         int split_point = y_start + std::rand() % (y_end - y_start);
-        if (y_end - split_point <= minimum_room_size || split_point - y_start <= minimum_room_size) {
-          arr = add_room(arr, y_start, y_end, x_start, x_end, maxlines, maxcols);
+        if (y_end - split_point <= minimum_space_size || split_point - y_start <= minimum_space_size) {
+          arr = add_room(arr, y_start, y_end, x_start, x_end, maxlines, maxcols, minimum_space_size - 2);
           return arr;
         } else {
           arr = fill_horizontal(arr, split_point, x_start, x_end);
-          arr = split_space(arr, maxlines, maxcols, minimum_room_size, split_point + 1, y_end, x_start, x_end);
-          arr = split_space(arr, maxlines, maxcols, minimum_room_size, y_start, split_point - 1, x_start, x_end);
+          arr = split_space(arr, maxlines, maxcols, minimum_space_size, split_point + 1, y_end, x_start, x_end);
+          arr = split_space(arr, maxlines, maxcols, minimum_space_size, y_start, split_point - 1, x_start, x_end);
           return arr;
         }
       } else {
         int split_point = x_start + std::rand() % (x_end - x_start);
-        if (x_end - split_point <= minimum_room_size || split_point - x_start <= minimum_room_size) {
-          arr = add_room(arr, y_start, y_end, x_start, x_end, maxlines, maxcols);
+        if (x_end - split_point <= minimum_space_size || split_point - x_start <= minimum_space_size) {
+          arr = add_room(arr, y_start, y_end, x_start, x_end, maxlines, maxcols, minimum_space_size - 2);
           return arr;
         } else {
           arr = fill_vertical(arr, split_point, y_start, y_end);
-          arr = split_space(arr, maxlines, maxcols, minimum_room_size, y_start, y_end, split_point + 1, x_end);
-          arr = split_space(arr, maxlines, maxcols, minimum_room_size, y_start, y_end, x_start, split_point - 1);
+          arr = split_space(arr, maxlines, maxcols, minimum_space_size, y_start, y_end, split_point + 1, x_end);
+          arr = split_space(arr, maxlines, maxcols, minimum_space_size, y_start, y_end, x_start, split_point - 1);
           return arr;
         }
       }
     }
-
-
 
     std::vector<std::vector<char> > make_p_hash(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
       for (int i = 0; i < maxlines - 1; i++) {
@@ -46,8 +44,6 @@ class GenerateMap {
       }
       return arr;
     }
-
-
 
     std::vector<std::vector<char> > remove_unnecessary_root(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
         // 列
@@ -98,6 +94,7 @@ class GenerateMap {
 
     std::vector<std::vector<char> > fill_till_borderline_horizontal(std::vector<std::vector<char> > arr, int draw_point, int x_start, bool up, int maxcols) {
       int i = x_start;
+      arr[draw_point][i] = '+';
 
       if (up) {
         i++;
@@ -115,6 +112,9 @@ class GenerateMap {
         for (int j = i - 1; j > x_start; j--) {
           arr[draw_point][j] = ' ';
         }
+        // remove door
+        arr[draw_point][x_start] = '|';
+
         return arr;
       } else {
         i--;
@@ -132,12 +132,16 @@ class GenerateMap {
         for (int j = i + 1; j < x_start; j++) {
           arr[draw_point][j] = ' ';
         }
+        // remove door
+        arr[draw_point][x_start] = '|';
+
         return arr;
       }
     }
 
     std::vector<std::vector<char> > fill_till_borderline_vertical(std::vector<std::vector<char> > arr, int draw_point, int y_start, bool up, int maxlines) {
       int i = y_start;
+      arr[i][draw_point] = '+';
       if (up) {
         i++;
         while (i >= 0 && i < maxlines - 1) {
@@ -154,6 +158,9 @@ class GenerateMap {
         for (int j = i - 1; j > y_start; j--) {
           arr[j][draw_point] = ' ';
         }
+        // remove door
+        arr[y_start][draw_point] = '-';
+
         return arr;
       } else {
         i--;
@@ -171,6 +178,9 @@ class GenerateMap {
         for (int j = i + 1; j < y_start; j++) {
           arr[j][draw_point] = ' ';
         }
+        // remove door
+        arr[y_start][draw_point] = '-';
+
         return arr;
       }
     }
@@ -178,32 +188,44 @@ class GenerateMap {
     std::vector<std::vector<char> > add_pass_to_border_line(std::vector<std::vector<char> > arr, int y_draw_start, int y_draw_end, int x_draw_start, int x_draw_end, int maxlines, int maxcols) {
       int draw_point;
       // 上
-      draw_point = x_draw_start + std::rand() % (x_draw_end - x_draw_start + 1);
+      draw_point = x_draw_start + 1 + std::rand() % (x_draw_end - x_draw_start - 1);
       arr = fill_till_borderline_vertical(arr, draw_point, y_draw_start, false, maxlines);
       // 下
-      draw_point = x_draw_start + std::rand() % (x_draw_end - x_draw_start + 1);
+      draw_point = x_draw_start + 1 + std::rand() % (x_draw_end - x_draw_start - 1);
       arr = fill_till_borderline_vertical(arr, draw_point, y_draw_end, true, maxlines);
       // 左
-      draw_point = y_draw_start + std::rand() % (y_draw_end - y_draw_start + 1);
+      draw_point = y_draw_start + 1 + std::rand() % (y_draw_end - y_draw_start - 1);
       arr = fill_till_borderline_horizontal(arr, draw_point, x_draw_start, false, maxcols);
       // 右
-      draw_point = y_draw_start + std::rand() % (y_draw_end - y_draw_start + 1);
+      draw_point = y_draw_start + 1 + std::rand() % (y_draw_end - y_draw_start - 1);
       arr = fill_till_borderline_horizontal(arr, draw_point, x_draw_end, true, maxcols);
       return arr;
     }
 
-    std::vector<std::vector<char> > add_room(std::vector<std::vector<char> > arr, int y_start, int y_end, int x_start, int x_end, int maxlines, int maxcols) {
-      int minimun_room_width = 2;
-      int y_draw_start = (y_start + 1) + std::rand() % ((y_end - 1) - (y_start + 1) - (minimun_room_width - 1));
-      int x_draw_start = (x_start + 1) + std::rand() % ((x_end - 1) - (x_start + 1) - (minimun_room_width - 1));
+    std::vector<std::vector<char> > add_room(std::vector<std::vector<char> > arr, int y_start, int y_end, int x_start, int x_end, int maxlines, int maxcols, int minimun_room_width) {
+      //int minimun_room_width = 2;
+      int y_draw_start = y_start + 1 + std::rand() % (y_end - y_start - minimun_room_width);
+      int x_draw_start = x_start + 1 + std::rand() % (x_end - x_start - minimun_room_width);
 
-      int y_draw_end = y_draw_start + std::rand() % ((y_end - 1) - y_draw_start) + (minimun_room_width - 1);
-      int x_draw_end = x_draw_start + std::rand() % ((x_end - 1) - x_draw_start) + (minimun_room_width - 1);
+      int y_draw_end = y_draw_start + minimun_room_width + std::rand() % (1 + y_end - y_draw_start - minimun_room_width);
+      int x_draw_end = x_draw_start + minimun_room_width + std::rand() % (1 + x_end - x_draw_start - minimun_room_width);
+
       for (int i = y_draw_start; i <= y_draw_end; i++) {
         for (int j = x_draw_start; j <= x_draw_end; j++) {
           arr[i][j] = '.';
         }
       }
+
+      for (int i = y_draw_start; i <= y_draw_end; i++) {
+        arr[i][x_draw_start] = '|';
+        arr[i][x_draw_end] = '|';
+      }
+
+      for (int i = x_draw_start; i <= x_draw_end; i++) {
+        arr[y_draw_start][i] = '-';
+        arr[y_draw_end][i] = '-';
+      }
+
       return add_pass_to_border_line(arr, y_draw_start, y_draw_end, x_draw_start, x_draw_end, maxlines, maxcols);
     }
 
@@ -212,7 +234,7 @@ class GenerateMap {
       for (int i = maxlines - 1; i >= 0; i--) {
         if (arr[i][row_number] == 'p') {
           erase_flag = false;
-        } else if (arr[i][row_number] == '.') {
+        } else if (arr[i][row_number] == '.' || arr[i][row_number] == '-') {
           return arr;
         } else if (arr[i][row_number] == ' '){
           for (int j = i + 2; j < maxlines; j++) {
@@ -243,7 +265,7 @@ class GenerateMap {
       for (int i = 0; i < maxlines; i++) {
         if (arr[i][row_number] == 'p') {
           erase_flag = false;
-        } else if (arr[i][row_number] == '.') {
+        } else if (arr[i][row_number] == '.' || arr[i][row_number] == '_') {
           return arr;
         } else if (arr[i][row_number] == ' '){
           for (int j = i - 2; j >= 0; j--) {
@@ -274,7 +296,7 @@ class GenerateMap {
       for (int i = 0; i < maxcols; i++) {
         if (arr[column_number][i] == 'p') {
           erase_flag = false;
-        } else if (arr[column_number][i] == '.') {
+        } else if (arr[column_number][i] == '.' || arr[column_number][i] == '|') {
           return arr;
         } else if (arr[column_number][i] == ' '){
           for (int j = i - 2; j >= 0; j--) {
@@ -305,7 +327,7 @@ class GenerateMap {
       for (int i = maxcols - 1; i >= 0; i--) {
         if (arr[column_number][i] == 'p') {
           erase_flag = false;
-        } else if (arr[column_number][i] == '.') {
+        } else if (arr[column_number][i] == '.' || arr[column_number][i] == '|') {
           return arr;
         } else if (arr[column_number][i] == ' '){
           for (int j = i + 2; j < maxcols; j++) {

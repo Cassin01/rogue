@@ -13,6 +13,7 @@
 
 #include "map.cpp"
 #include "manipulate_me.cpp"
+#include "handle_display.cpp"
 
 
 void init_curses() {
@@ -91,24 +92,29 @@ int main(void) {
 
     std::vector<std::vector<char> > arr = init_arr(maxlines, maxcols);
 
-    arr = generate_map.split_space(arr, maxlines, maxcols, 4, 0, maxlines - 1, 0, maxcols - 1);
+    arr = generate_map.split_space(arr, maxlines, maxcols, 6, 0, maxlines - 1, 0, maxcols - 1);
     arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
     arr = generate_map.make_p_hash(arr, maxlines, maxcols);
 
-    write(arr);
+    //write(arr);
 
     ManipulateMe manipulate_me(arr, 0, 0);
     manipulate_me.spawn_at_room(arr, maxlines, maxcols);
     bool emulate_sucess_flag = false;
 
+    //HandleDisplay hanle_display(maxlines, maxcols);
+    //hanle_display.add_a_room_to_displayed_data(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
+
+    //write(hanle_display.get_displayed_data());
+    write(arr);
+
+    // add '@'
+    mvaddch(manipulate_me.get_my_y(), manipulate_me.get_my_x(), '@');
+    refresh();
+
     while (true)
     {
         int ch = getch();
-        /*
-        if (emulate_sucess_flag) {
-            manipulate_me.erase_me();
-        }
-        */
         if (ch == 'q' || ch == 'Q')
         {
             break;
@@ -122,6 +128,5 @@ int main(void) {
             }
         }
     }
-
     determinate_curses(maxlines);
 }
