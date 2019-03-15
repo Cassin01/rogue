@@ -13,7 +13,7 @@
 
 #include "map.cpp"
 #include "manipulate_me.cpp"
-#include "handle_display.cpp"
+//#include "handle_display.cpp"
 
 
 void init_curses() {
@@ -84,6 +84,9 @@ int main(void) {
     // initialize curses
     init_curses();
 
+    // カーソルを非表示
+    curs_set(0);
+
     // initialize triangle
     int maxlines = LINES - 1;
     int maxcols = COLS - 1;
@@ -100,13 +103,11 @@ int main(void) {
 
     ManipulateMe manipulate_me(arr, 0, 0);
     manipulate_me.spawn_at_room(arr, maxlines, maxcols);
-    bool emulate_sucess_flag = false;
 
-    //HandleDisplay hanle_display(maxlines, maxcols);
-    //hanle_display.add_a_room_to_displayed_data(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
-
-    //write(hanle_display.get_displayed_data());
-    write(arr);
+    //HandleDisplay handle_display;
+    //handle_display.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
+    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
+    //write(arr);
 
     // add '@'
     mvaddch(manipulate_me.get_my_y(), manipulate_me.get_my_x(), '@');
@@ -115,17 +116,16 @@ int main(void) {
     while (true)
     {
         int ch = getch();
-        if (ch == 'q' || ch == 'Q')
-        {
+        if (ch == 'q' || ch == 'Q') {
             break;
-        }
-        else
-        {
-            manipulate_me.update_me(arr);
-            emulate_sucess_flag = manipulate_me.emulate(ch, maxlines, maxcols, arr);
-            if (emulate_sucess_flag) {
-                manipulate_me.erase_me();
+        } else {
+            if (arr[manipulate_me.get_my_y()][manipulate_me.get_my_x()] == '+') {
+                //handle_display.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
+                manipulate_me.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
             }
+
+            manipulate_me.update_me(arr);
+            manipulate_me.emulate(ch, maxlines, maxcols, arr);
         }
     }
     determinate_curses(maxlines);

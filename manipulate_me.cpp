@@ -1,7 +1,8 @@
 #include <curses.h>
 #include <vector>
+#include "handle_display.cpp"
 
-class ManipulateMe
+class ManipulateMe : public HandleDisplay
 {
     private:
         int my_x;
@@ -58,58 +59,85 @@ class ManipulateMe
             }
         }
 
-        bool emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
+        void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
+            HandleDisplay handle_display;
             switch (ch) {
                 case 'a': // 左
                     if (0 < my_x - 1 && on_land(arr, my_y, my_x - 1))
                     {
+                        if (arr[my_y][my_x] == '+' && arr[my_y][my_x - 1] == '#') {
+                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x - 1;
                         mvaddch(my_y, my_x, '@');
                         refresh();
-                        return true;
+                        erase_me();
+                        return;
                     } else {
-                        return false;
+                        mvaddch(my_y, my_x, '@');
+                        refresh();
+                        return;
                     }
                     break;
                 case 's': // 下
                     if (maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x))
                     {
+                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x] == '#') {
+                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y + 1;
                         mvaddch(my_y, my_x, '@');
                         refresh();
-                        return true;
+                        erase_me();
+                        return;
                     } else {
-                        return false;
+                        mvaddch(my_y, my_x, '@');
+                        refresh();
+                        return;
                     }
                     break;
                 case 'w': // 上
                     if (0 < my_y - 1 && on_land(arr, my_y - 1, my_x))
                     {
+                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x] == '#') {
+                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y - 1;
                         mvaddch(my_y, my_x, '@');
                         refresh();
-                        return true;
+                        erase_me();
+                        return;
                     } else {
-                        return false;
+                        mvaddch(my_y, my_x, '@');
+                        refresh();
+                        return;
                     }
                     break;
                 case 'd': // 右
                     if (maxcols > my_x + 1 && on_land(arr, my_y, my_x + 1))
                     {
+                        if (arr[my_y][my_x] == '+' && arr[my_y][my_x + 1] == '#') {
+                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x + 1;
                         mvaddch(my_y, my_x, '@');
                         refresh();
-                        return true;
+                        erase_me();
+                        return;
                     } else {
-                        return false;
+                        mvaddch(my_y, my_x, '@');
+                        refresh();
+                        return;
                     }
                     break;
                 default:
-                    return false;
+                    mvaddch(my_y, my_x, '@');
+                    refresh();
+                    return;
                     break;
             }
         }
