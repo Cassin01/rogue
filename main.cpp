@@ -123,9 +123,12 @@ int main(void) {
                 //handle_display.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
                 manipulate_me.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
             }
-
             manipulate_me.update_me(arr);
             manipulate_me.emulate(ch, maxlines, maxcols, arr);
+
+            if (arr[manipulate_me.get_my_y()][manipulate_me.get_my_x()] == '#') {
+                manipulate_me.serch_and_display(arr, manipulate_me.get_my_y(),  manipulate_me.get_my_x(), maxlines, maxcols);
+            }
         }
     }
     determinate_curses(maxlines);
