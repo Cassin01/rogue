@@ -7,3 +7,12 @@ A Rogue like game
 ```c++
 g++ main.cpp -lcurses && ./a.out
 ```
+
+# Move
+
+| Direciton | Key |
+|-----------|-----|
+|Up         | w   |
+|Down       | s   |
+|Left       | a   |
+|Right      | d   |
