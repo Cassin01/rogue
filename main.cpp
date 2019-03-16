@@ -12,9 +12,8 @@
 #include <iostream>
 
 #include "map.cpp"
-#include "manipulate_me.cpp"
-//#include "handle_display.cpp"
-
+#include "manipulate_me/mod.cpp"
+#include "game_ai/mod.cpp"
 
 void init_curses() {
     // Start curses mode
@@ -77,6 +76,33 @@ void arr_debug(std::vector<std::vector<char> > arr) {
 
 }
 
+int is_num(char ch) {
+    switch (ch)
+    {
+    case '1':
+        return 1;
+    case '2':
+        return 2;
+    case '3':
+        return 3;
+    case '4':
+        return 4;
+    case '5':
+        return 5;
+    case '6':
+        return 6;
+    case '7':
+        return 7;
+    case '8':
+        return 8;
+    case '9':
+        return 9;
+    default:
+        return 10;
+    }
+}
+
+
 int main(void) {
     // Generate seed
     std::srand(std::time(nullptr));
@@ -99,36 +125,30 @@ int main(void) {
     arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
     arr = generate_map.make_p_hash(arr, maxlines, maxcols);
 
-    //write(arr);
-
     ManipulateMe manipulate_me(arr, 0, 0);
     manipulate_me.spawn_at_room(arr, maxlines, maxcols);
 
-    //HandleDisplay handle_display;
-    //handle_display.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
     manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
-    //write(arr);
 
     // add '@'
-    mvaddch(manipulate_me.get_my_y(), manipulate_me.get_my_x(), '@');
-    refresh();
+    manipulate_me.draw_me();
+
+    // add enemys
+    GameAI game_ai;
+    std::vector<std::tuple<int, int> > enemy_positions = game_ai.generate_positions(arr, maxlines, maxcols, std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()));
 
     while (true)
     {
         int ch = getch();
         if (ch == 'q' || ch == 'Q') {
             break;
+        } else if (0 < is_num(ch) && is_num(ch) < 10) {
+            int ch_in = getch();
+            for (int i = 0; i < is_num(ch); i++) {
+                manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch_in);
+            }
         } else {
-            if (arr[manipulate_me.get_my_y()][manipulate_me.get_my_x()] == '+') {
-                //handle_display.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
-                manipulate_me.display(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
-            }
-            manipulate_me.update_me(arr);
-            manipulate_me.emulate(ch, maxlines, maxcols, arr);
-
-            if (arr[manipulate_me.get_my_y()][manipulate_me.get_my_x()] == '#') {
-                manipulate_me.serch_and_display(arr, manipulate_me.get_my_y(),  manipulate_me.get_my_x(), maxlines, maxcols);
-            }
+            manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch);
         }
     }
     determinate_curses(maxlines);

@@ -1,6 +1,6 @@
 #include <curses.h>
 #include <vector>
-#include "handle_display.cpp"
+#include "../handle_display/mod.cpp"
 
 class ManipulateMe : public HandleDisplay
 {
@@ -141,4 +141,23 @@ class ManipulateMe : public HandleDisplay
                     break;
             }
         }
+
+    std::vector<std::vector<char> > operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch) {
+        if (arr[my_y][my_x] == '+') {
+            display(arr, my_y, my_x, maxlines, maxcols);
+        }
+        update_me(arr);
+        emulate(ch, maxlines, maxcols, arr);
+
+        if (arr[my_y][my_x] == '#') {
+            serch_and_display(arr, my_y,  my_x, maxlines, maxcols);
+        }
+
+        return arr;
+    }
+
+    void draw_me(void) {
+        mvaddch(my_y, my_x, '@');
+        refresh();
+    }
 };
