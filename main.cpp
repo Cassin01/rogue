@@ -15,6 +15,9 @@
 #include "manipulate_me/mod.cpp"
 #include "game_ai/mod.cpp"
 
+// 文章ファイル読み込み
+#include "read_text.cpp"
+
 void init_curses() {
     // Start curses mode
     initscr();
@@ -107,6 +110,9 @@ int main(void) {
     // Generate seed
     std::srand(std::time(nullptr));
 
+    // 2バイト文字有効化
+    setlocale(LC_ALL, "");
+
     // initialize curses
     init_curses();
 
@@ -117,11 +123,20 @@ int main(void) {
     int maxlines = LINES - 1;
     int maxcols = COLS - 1;
 
+    int text_lines = 10;
+    int minimun_space_size = 6;
+
+    if (maxlines > text_lines + minimun_space_size) {
+        ReadText read_text;
+        maxlines = maxlines - text_lines;
+        mvaddstr(maxlines + 1, 0,read_text.read("02.txt").c_str());
+    }
+
     GenerateMap generate_map;
 
     std::vector<std::vector<char> > arr = init_arr(maxlines, maxcols);
 
-    arr = generate_map.split_space(arr, maxlines, maxcols, 6, 0, maxlines - 1, 0, maxcols - 1);
+    arr = generate_map.split_space(arr, maxlines, maxcols, minimun_space_size, 0, maxlines - 1, 0, maxcols - 1);
     arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
     arr = generate_map.make_p_hash(arr, maxlines, maxcols);
 
