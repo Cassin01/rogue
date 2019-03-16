@@ -105,32 +105,14 @@ int is_num(char ch) {
     }
 }
 
-
-int main(void) {
-    // Generate seed
-    std::srand(std::time(nullptr));
-
-    // 2バイト文字有効化
-    setlocale(LC_ALL, "");
-
-    // initialize curses
-    init_curses();
-
-    // カーソルを非表示
-    curs_set(0);
-
-    // initialize triangle
-    int maxlines = LINES - 1;
-    int maxcols = COLS - 1;
-
+void game_main_stream(int windows_maxlines, int windows_maxcols) {
     int text_lines = 10;
     int minimun_space_size = 6;
 
-    if (maxlines > text_lines + minimun_space_size) {
-        ReadText read_text;
-        maxlines = maxlines - text_lines;
-        mvaddstr(maxlines + 1, 0,read_text.read("02.txt").c_str());
-    }
+    ReadText read_text;
+    int maxlines = windows_maxlines - text_lines;
+    int maxcols  = windows_maxcols;
+    mvaddstr(maxlines + 1, 0, read_text.read("02.txt").c_str());
 
     GenerateMap generate_map;
 
@@ -166,5 +148,36 @@ int main(void) {
             manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch);
         }
     }
+}
+
+void prologue(void) {
+    ReadText read_text;
+    printw(read_text.read("01.txt").c_str());
+    int ch = getch();
+    clear();
+}
+
+
+int main(void) {
+    // Generate seed
+    std::srand(std::time(nullptr));
+
+    // 2バイト文字有効化
+    setlocale(LC_ALL, "");
+
+    // initialize curses
+    init_curses();
+
+    // カーソルを非表示
+    curs_set(0);
+
+    // initialize triangle
+    int maxlines = LINES - 1;
+    int maxcols = COLS - 1;
+
+    prologue();
+    game_main_stream(maxlines, maxcols);
+
+
     determinate_curses(maxlines);
 }
