@@ -1,4 +1,4 @@
-# Rogue
+# 真夏の夜のサンサーラ
 A Rogue like game
 
 ![プレイ画面1](https://github.com/Cassin01/rogue/blob/images/01.png)
