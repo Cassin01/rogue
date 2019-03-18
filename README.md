@@ -1,6 +1,7 @@
 # Rogue
 A Rogue like game
 
+![プレイ画面](https://github.com/Cassin01/rogue/blob/images/01.png)
 
 ## Compile and Run
 
