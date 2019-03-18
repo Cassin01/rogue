@@ -8,7 +8,7 @@ A Rogue like game
 clang++ main.cpp -lcurses -std=c++14 && ./a.out
 ```
 
-## Command (コマンド)
+## Commands (コマンド)
 ### Move (移動)
 
 | Direciton | Key |
