@@ -10,6 +10,7 @@
 // Others
 #include <vector>
 #include <iostream>
+#include <string>
 
 #include "map.cpp"
 #include "manipulate_me/mod.cpp"
@@ -125,23 +126,33 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
     ManipulateMe manipulate_me(0, 0, '@', arr[0][0]);
     manipulate_me.spawn_at_room(arr, maxlines, maxcols);
 
-    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
 
-    // add '@'
-    manipulate_me.draw_me();
-
-    // add enemys
+    // define position that enemys spawn
     GameAI game_ai;
     std::vector<std::tuple<int, int> > enemy_positions =
         game_ai.generate_positions(arr, maxlines, maxcols,
-            std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()));
+            std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()), 8);
+
+    // for debug
+    mvaddstr(0, 0, std::to_string(enemy_positions.size()).c_str());
+    refresh();
+    for (auto &i: enemy_positions) {
+        mvaddch(std::get<0>(i), std::get<1>(i), 'B');
+        refresh();
+    }
 
     // Generate enemy objects
     std::vector<ManipulateMe> enemy_objects;
-    for (auto enemy_position: enemy_positions) {
+    for (auto &enemy_position: enemy_positions) {
         ManipulateMe enemy_object(std::get<0>(enemy_position), std::get<1>(enemy_position), 'A', arr[std::get<0>(enemy_position)][std::get<1>(enemy_position)]);
         enemy_objects.push_back(enemy_object);
     }
+
+    // Start draw
+    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_positions);
+
+    // add '@'
+    manipulate_me.draw_me();
 
     while (true)
     {
@@ -151,10 +162,10 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
         } else if (0 < is_num(ch) && is_num(ch) < 10) {
             int ch_in = getch();
             for (int i = 0; i < is_num(ch); i++) {
-                manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch_in);
+                manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch_in, enemy_objects);
             }
         } else {
-            manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch);
+            manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch, enemy_objects);
         }
     }
 }

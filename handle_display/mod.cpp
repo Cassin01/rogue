@@ -70,15 +70,27 @@ class HandleDisplay {
             }
         }
 
+        bool is_enemy_position(std::vector<std::tuple<int, int> > enemy_positions, int emulated_y, int emulated_x) {
+            for (auto &enemy_position: enemy_positions) {
+                if (std::get<0>(enemy_position) == emulated_y && std::get<1>(enemy_position) == emulated_x) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     public:
-        void display_room(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
-            if (arr[at_y][at_x] == '.') {
-                RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
-                for (int i = room_size.y; i < room_size.diagonal_y + 1; i++) {
-                    for (int j = room_size.x; j < room_size.diagonal_x + 1; j++) {
+        void display_room(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::tuple<int, int> > enemy_positions) {
+            RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
+            for (int i = room_size.y; i < room_size.diagonal_y + 1; i++) {
+                for (int j = room_size.x; j < room_size.diagonal_x + 1; j++) {
+                        if (is_enemy_position(enemy_positions, i, j)) {
+                            mvaddch(i, j, 'A');
+                            refresh();
+                        } else {
                             mvaddch(i, j, arr[i][j]);
                             refresh();
-                    }
+                        }
                 }
             }
         }
@@ -143,34 +155,36 @@ class HandleDisplay {
 
         }
 
+        /*
         void display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
             if (arr[at_y][at_x] == '+') {
                 // 上
                 if (at_y - 1 >= 0) {
                     if (arr[at_y - 1][at_x] == '.') {
-                        display_room(arr, at_y - 1, at_x, maxlines, maxcols);
+                        RoomSize room_size = display_room(arr, at_y - 1, at_x, maxlines, maxcols);
                     }
                 }
                 // 下
                 if (at_y + 1 < maxlines - 1) {
                     if (arr[at_y + 1][at_x] == '.') {
-                        display_room(arr, at_y + 1, at_x, maxlines, maxcols);
+                        RoomSize room_size = display_room(arr, at_y + 1, at_x, maxlines, maxcols);
                     }
                 }
                 // 右
                 if (at_x - 1 >= 0) {
                     if (arr[at_y][at_x - 1] == '.') {
-                        display_room(arr, at_y, at_x - 1, maxlines, maxcols);
+                        RoomSize room_size = display_room(arr, at_y, at_x - 1, maxlines, maxcols);
                     }
                 }
                 // 左
                 if (at_x + 1 < maxcols - 1) {
                     if (arr[at_y][at_x + 1] == '.') {
-                        display_room(arr, at_y, at_x + 1, maxlines, maxcols);
+                        RoomSize room_size = display_room(arr, at_y, at_x + 1, maxlines, maxcols);
                     }
                 }
             }
         }
+        */
         void serch_and_display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
             // 上
             if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '#') {
