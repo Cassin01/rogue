@@ -78,9 +78,10 @@ class ManipulateMe : public HandleDisplay
             }
         }
 
-        bool is_enemy_position(std::vector<std::tuple<int, int> > enemy_positions, int emulated_y, int emulated_x) {
-            for (auto &enemy_position: enemy_positions) {
-                if (std::get<0>(enemy_position) == emulated_y && std::get<1>(enemy_position) == emulated_x) {
+        //bool is_enemy_position(std::vector<std::tuple<int, int> > enemy_positions, int emulated_y, int emulated_x) {
+        bool is_enemy_position(std::vector<ManipulateMe> enemy_objects, int emulated_y, int emulated_x) {
+            for (auto &enemy_object: enemy_objects) {
+                if (enemy_object.my_y == emulated_y && enemy_object.my_x == emulated_x) {
                     return true;
                 }
             }
@@ -88,14 +89,19 @@ class ManipulateMe : public HandleDisplay
         }
 
     public:
-        ManipulateMe(int x, int y, char symbol0, char under_foot0) {
-            symbol = symbol0;
-            my_x = x;
-            my_y = y;
-            under_foot = under_foot0;
-            my_previous_x = my_x;
-            my_previous_y = my_y;
-        }
+        // デフォルトコンストラクタ // Vectorにこのクラスのオブジェクトを入れる必要
+        ManipulateMe() :
+            my_y(0), my_x(0), symbol('@'), under_foot('.') {}
+
+        // コンストラクタ
+        ManipulateMe(int y, int x, char  symbol0, char under_foot0) :
+            my_y(y), my_x(x), symbol(symbol0), under_foot(under_foot0),
+            my_previous_y(y),  my_previous_x(x) {}
+
+        // コピーコンストラクタ // Vectorにこのクラスのオブジェクトを入れるのに必要
+        ManipulateMe(const ManipulateMe &manipulate_me) :
+            my_y(manipulate_me.my_y), my_x(manipulate_me.my_x), symbol(manipulate_me.symbol),
+            under_foot(manipulate_me.under_foot) {}
 
         int get_my_x() {
             return my_x;
@@ -166,14 +172,15 @@ class ManipulateMe : public HandleDisplay
         }
 
 
-        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::tuple<int, int>> enemy_positions)
+//        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::tuple<int, int>> enemy_positions)
+        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects)
         {
             RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y, at_x, maxlines, maxcols);
             for (int i = room_size.y; i < room_size.diagonal_y + 1; i++)
             {
                 for (int j = room_size.x; j < room_size.diagonal_x + 1; j++)
                 {
-                    if (is_enemy_position(enemy_positions, i, j))
+                    if (is_enemy_position(enemy_objects, i, j))
                     {
                         mvaddch(i, j, 'A');
                         refresh();
@@ -275,27 +282,22 @@ class ManipulateMe : public HandleDisplay
         }
 
         void display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects) {
-            std::vector<std::tuple<int, int>> enemy_positions;
-            for (auto &enemy_object: enemy_objects) {
-                enemy_positions.push_back(std::make_tuple(enemy_object.my_x, enemy_object.my_y));
-            }
-
             if (arr[at_y][at_x] == '+') {
                 // 上
                 if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '.') {
-                    display_room(arr, at_y - 1, at_x, maxlines, maxcols, enemy_positions);
+                    display_room(arr, at_y - 1, at_x, maxlines, maxcols, enemy_objects);
                 }
                 // 下
                 else if (at_y + 1 < maxlines - 1 && arr[at_y + 1][at_x] == '.') {
-                    display_room(arr, at_y + 1, at_x, maxlines, maxcols, enemy_positions);
+                    display_room(arr, at_y + 1, at_x, maxlines, maxcols, enemy_objects);
                 }
                 // 右
                 else if (at_x - 1 >= 0 && arr[at_y][at_x - 1] == '.') {
-                    display_room(arr, at_y, at_x - 1, maxlines, maxcols, enemy_positions);
+                    display_room(arr, at_y, at_x - 1, maxlines, maxcols, enemy_objects);
                 }
                 // 左
                 else if (at_x + 1 < maxcols - 1 && arr[at_y][at_x + 1] == '.') {
-                    display_room(arr, at_y, at_x + 1, maxlines, maxcols, enemy_positions);
+                    display_room(arr, at_y, at_x + 1, maxlines, maxcols, enemy_objects);
                 }
             }
         }

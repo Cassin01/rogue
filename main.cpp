@@ -133,23 +133,16 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
         game_ai.generate_positions(arr, maxlines, maxcols,
             std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()), 8);
 
-    // for debug
-    mvaddstr(0, 0, std::to_string(enemy_positions.size()).c_str());
-    refresh();
-    for (auto &i: enemy_positions) {
-        mvaddch(std::get<0>(i), std::get<1>(i), 'B');
-        refresh();
-    }
-
     // Generate enemy objects
     std::vector<ManipulateMe> enemy_objects;
-    for (auto &enemy_position: enemy_positions) {
-        ManipulateMe enemy_object(std::get<0>(enemy_position), std::get<1>(enemy_position), 'A', arr[std::get<0>(enemy_position)][std::get<1>(enemy_position)]);
-        enemy_objects.push_back(enemy_object);
+    for (std::tuple<int, int> enemy_position: enemy_positions) {
+        static int &tmp_y = std::get<0>(enemy_position);
+        static int &tmp_x = std::get<1>(enemy_position);
+        int tmp_under_foot = arr[tmp_y][tmp_x];
+        enemy_objects.push_back(ManipulateMe(tmp_y, tmp_x, 'A', tmp_under_foot));
     }
-
     // Start draw
-    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_positions);
+    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_objects);
 
     // add '@'
     manipulate_me.draw_me();
@@ -203,7 +196,6 @@ int main(void) {
 
     prologue();
     game_main_stream(maxlines, maxcols);
-
 
     determinate_curses(maxlines);
 }
