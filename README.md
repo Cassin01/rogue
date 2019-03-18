@@ -24,7 +24,7 @@ Press ``q`` or ``Q``
 ### forced termination (ゲームの強制終了)
 Press ``CTRL-z`` or ``CTRL-c``
 
-## Symbol (記号)
+## Symbols (記号)
 | Symbol | Meaning  |意味するもの |
 |--------|----------|-----------|
 | @      | yourself |あなた自身  |
