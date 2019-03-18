@@ -15,7 +15,6 @@ class ReadText {
           return err;
       }
 
-      // ほとんどさっきと同じですが、こうもかけます。こっちのほうがわかりやすい
       std::istreambuf_iterator<char> it(ifs);
       std::istreambuf_iterator<char> last;
       std::string str(it, last);
