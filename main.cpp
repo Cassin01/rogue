@@ -174,6 +174,9 @@ void prologue(void) {
     printw(read_text.read("./texts/prologue/01-3.txt").c_str());
     ch = getch();
     clear();
+    printw(read_text.read("./texts/prologue/001.txt").c_str());
+    ch = getch();
+    clear();
 }
 
 
