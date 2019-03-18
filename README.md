@@ -19,7 +19,7 @@ clang++ main.cpp -lcurses -std=c++14 && ./a.out
 |Right      | d   |
 
 # Quit (ゲームの終了)
-Press 'q' or 'Q'
+Press ``q`` or ``Q``
 
 # forced termination (ゲームの強制終了)
-Press 'CTRL-z' or CTRL-c
+Press ``CTRL-z`` or ``CTRL-c``
