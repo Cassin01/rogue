@@ -5,12 +5,88 @@
 class ManipulateMe : public HandleDisplay
 {
     private:
+        class RoomSize {
+        public:
+            int x;
+            int y;
+            int diagonal_x;
+            int diagonal_y;
+        };
         int my_x;
         int my_y;
         int my_previous_x;
         int my_previous_y;
         char under_foot;
         char symbol;
+        void erase_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+            if (arr[at_y][at_x] == '+') {
+                // 上
+                if (at_y - 1 >= 0) {
+                    if (arr[at_y - 1][at_x] == '.') {
+                        erase_rooms_floor(arr, at_y - 1, at_x, maxlines, maxcols);
+                    }
+                }
+                // 下
+                if (at_y + 1 < maxlines - 1) {
+                    if (arr[at_y + 1][at_x] == '.') {
+                        erase_rooms_floor(arr, at_y + 1, at_x, maxlines, maxcols);
+                    }
+                }
+                // 右
+                if (at_x - 1 >= 0) {
+                    if (arr[at_y][at_x - 1] == '.') {
+                        erase_rooms_floor(arr, at_y, at_x - 1, maxlines, maxcols);
+                    }
+                }
+                // 左
+                if (at_x + 1 < maxcols - 1) {
+                    if (arr[at_y][at_x + 1] == '.') {
+                        erase_rooms_floor(arr, at_y, at_x + 1, maxlines, maxcols);
+                    }
+                }
+            }
+
+        }
+
+        void erase_rooms_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+            if (arr[at_y][at_x] == '.') {
+                RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
+                for (int i = room_size.y + 1; i < room_size.diagonal_y; i++) {
+                    for (int j = room_size.x + 1; j < room_size.diagonal_x; j++) {
+                            mvaddch(i, j, ' ');
+                            refresh();
+                    }
+                }
+            }
+        }
+
+        void display_rooms_wall(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+            if (arr[at_y][at_x] == '.') {
+                RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
+                for (int i = room_size.x; i < room_size.diagonal_x + 1; i++) {
+                        mvaddch(room_size.y, i, arr[room_size.y][i]);
+                        refresh();
+                        mvaddch(room_size.diagonal_y, i, arr[room_size.diagonal_y][i]);
+                        refresh();
+                }
+                for (int i = room_size.y; i < room_size.diagonal_y + 1; i++) {
+                    mvaddch(i, room_size.x, arr[i][room_size.x]);
+                    refresh();
+                    mvaddch(i, room_size.diagonal_x, arr[i][room_size.diagonal_x]);
+                    refresh();
+                }
+            }
+        }
+
+        bool is_enemy_position(std::vector<std::tuple<int, int> > enemy_positions, int emulated_y, int emulated_x) {
+            for (auto &enemy_position: enemy_positions) {
+                if (std::get<0>(enemy_position) == emulated_y && std::get<1>(enemy_position) == emulated_x) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     public:
         ManipulateMe(int x, int y, char symbol0, char under_foot0) {
             symbol = symbol0;
@@ -60,27 +136,66 @@ class ManipulateMe : public HandleDisplay
                 return false;
             }
         }
+        RoomSize compute_size_of_room_that_you_in(std::vector<std::vector<char> > arr, int y, int x, int maxlines, int maxcols) {
+            RoomSize room_size;
+            for (int yi = y; yi >= 0; yi--) {
+                room_size.y = yi;
+                if (arr[yi][x] == '-' || arr[yi][x] == '+') {
+                    break;
+                }
+            }
+            for (int yi = y; yi < maxlines; yi++) {
+                room_size.diagonal_y = yi;
+                if (arr[yi][x] == '-' || arr[yi][x] == '+') {
+                    break;
+                }
+            }
+            for (int xi = x; xi >= 0; xi--) {
+                room_size.x = xi;
+                if (arr[y][xi] == '|' || arr[y][xi] == '+') {
+                    break;
+                }
+            }
+            for (int xi = x; xi < maxcols; xi++) {
+                room_size.diagonal_x = xi;
+                if (arr[y][xi] == '|' || arr[y][xi] == '+') {
+                    break;
+                }
+            }
+            return room_size;
+        }
 
-        void display_enemys_in_room(std::tuple<int, int, int, int> room_size, std::vector<ManipulateMe> enemy_objects) {
-            for (auto &enemy_object: enemy_objects) {
-                int enemy_y = enemy_object.my_y;
-                int enemy_x = enemy_object.my_x;
-                if (std::get<0>(room_size) < enemy_y && enemy_y < std::get<2>(room_size) &&
-                    std::get<1>(room_size) < enemy_x && enemy_x < std::get<3>(room_size)) {
-                        mvaddch(enemy_y, enemy_x, enemy_object.symbol);
+
+        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::tuple<int, int>> enemy_positions)
+        {
+            RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y, at_x, maxlines, maxcols);
+            for (int i = room_size.y; i < room_size.diagonal_y + 1; i++)
+            {
+                for (int j = room_size.x; j < room_size.diagonal_x + 1; j++)
+                {
+                    if (is_enemy_position(enemy_positions, i, j))
+                    {
+                        mvaddch(i, j, 'A');
                         refresh();
+                    }
+                    else
+                    {
+                        mvaddch(i, j, arr[i][j]);
+                        refresh();
+                    }
                 }
             }
         }
 
         void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
-            HandleDisplay handle_display;
+            //HandleDisplay handle_display;
             switch (ch) {
                 case 'a': // 左
                     if (0 < my_x - 1 && on_land(arr, my_y, my_x - 1))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y][my_x - 1] == '#') {
-                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x - 1;
@@ -98,7 +213,8 @@ class ManipulateMe : public HandleDisplay
                     if (maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x] == '#') {
-                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y + 1;
@@ -116,7 +232,8 @@ class ManipulateMe : public HandleDisplay
                     if (0 < my_y - 1 && on_land(arr, my_y - 1, my_x))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x] == '#') {
-                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y - 1;
@@ -134,7 +251,8 @@ class ManipulateMe : public HandleDisplay
                     if (maxcols > my_x + 1 && on_land(arr, my_y, my_x + 1))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y][my_x + 1] == '#') {
-                            handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x + 1;
