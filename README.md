@@ -1,4 +1,4 @@
-# 真夏の夜の(仮題)
+# Rogue
 A Rogue like game
 
 
