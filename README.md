@@ -5,7 +5,7 @@ A Rogue like game
 # Compile and Run
 
 ```c++
-g++ main.cpp -lcurses -std=c++14 && ./a.out
+clang++ main.cpp -lcurses -std=c++14 && ./a.out
 ```
 
 # Move
