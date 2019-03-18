@@ -25,14 +25,15 @@ Press ``q`` or ``Q``
 Press ``CTRL-z`` or ``CTRL-c``
 
 ## Symbol (記号)
-| Symbol | Meaning  |
-|--------|----------|
-| @      | yourself |
-| .      | floor    |
-| +      | door     |
-| A      | enemy    |
-| \|     | wall     |
-| -      | wall     |
+| Symbol | Meaning  |意味するもの |
+|--------|----------|-----------|
+| @      | yourself |あなた自身  |
+| .      | floor    |床   |      
+| +      | door     |扉|
+| A      | enemy    |敵|
+| \|     | wall     |壁|
+| -      | wall     |壁|
+| #      | root     |道|
 
 ## 参考
 夢枕獏 上弦の月を喰べる獅子
