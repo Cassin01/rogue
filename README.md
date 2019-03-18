@@ -8,7 +8,8 @@ A Rogue like game
 clang++ main.cpp -lcurses -std=c++14 && ./a.out
 ```
 
-# Move
+# Command (コマンド)
+# Move (移動)
 
 | Direciton | Key |
 |-----------|-----|
@@ -16,3 +17,6 @@ clang++ main.cpp -lcurses -std=c++14 && ./a.out
 |Down       | s   |
 |Left       | a   |
 |Right      | d   |
+
+# Quit (ゲームの終了)
+Press 'q' or CTRL-z or CTRL-c
