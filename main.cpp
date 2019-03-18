@@ -112,7 +112,7 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
     ReadText read_text;
     int maxlines = windows_maxlines - text_lines;
     int maxcols  = windows_maxcols;
-    mvaddstr(maxlines + 1, 0, read_text.read("02.txt").c_str());
+    mvaddstr(maxlines + 1, 0, read_text.read("./texts/cp01/02.txt").c_str());
 
     GenerateMap generate_map;
 
@@ -122,7 +122,7 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
     arr = generate_map.remove_unnecessary_root(arr, maxlines, maxcols);
     arr = generate_map.make_p_hash(arr, maxlines, maxcols);
 
-    ManipulateMe manipulate_me(arr, 0, 0);
+    ManipulateMe manipulate_me(0, 0, '@', arr[0][0]);
     manipulate_me.spawn_at_room(arr, maxlines, maxcols);
 
     manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols);
@@ -132,7 +132,16 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
 
     // add enemys
     GameAI game_ai;
-    std::vector<std::tuple<int, int> > enemy_positions = game_ai.generate_positions(arr, maxlines, maxcols, std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()));
+    std::vector<std::tuple<int, int> > enemy_positions =
+        game_ai.generate_positions(arr, maxlines, maxcols,
+            std::make_tuple(manipulate_me.get_my_y(), manipulate_me.get_my_x()));
+
+    // Generate enemy objects
+    std::vector<ManipulateMe> enemy_objects;
+    for (auto enemy_position: enemy_positions) {
+        ManipulateMe enemy_object(std::get<0>(enemy_position), std::get<1>(enemy_position), 'A', arr[std::get<0>(enemy_position)][std::get<1>(enemy_position)]);
+        enemy_objects.push_back(enemy_object);
+    }
 
     while (true)
     {
@@ -152,8 +161,14 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
 
 void prologue(void) {
     ReadText read_text;
-    printw(read_text.read("01.txt").c_str());
+    printw(read_text.read("./texts/prologue/01-1.txt").c_str());
     int ch = getch();
+    clear();
+    printw(read_text.read("./texts/prologue/01-2.txt").c_str());
+    ch = getch();
+    clear();
+    printw(read_text.read("./texts/prologue/01-3.txt").c_str());
+    ch = getch();
     clear();
 }
 

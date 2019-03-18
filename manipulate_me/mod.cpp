@@ -10,11 +10,14 @@ class ManipulateMe : public HandleDisplay
         int my_previous_x;
         int my_previous_y;
         char under_foot;
+        char symbol;
     public:
-        ManipulateMe(std::vector<std::vector<char> > arr, int x, int y) {
+        ManipulateMe(int x, int y, char symbol0, char under_foot0) {
+            symbol = symbol0;
             my_x = x;
             my_y = y;
-            under_foot = arr[my_y][my_x];
+            //under_foot = arr[my_y][my_x];
+            under_foot = under_foot0;
             my_previous_x = my_x;
             my_previous_y = my_y;
         }
@@ -70,12 +73,12 @@ class ManipulateMe : public HandleDisplay
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x - 1;
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         erase_me();
                         return;
                     } else {
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         return;
                     }
@@ -88,12 +91,12 @@ class ManipulateMe : public HandleDisplay
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y + 1;
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         erase_me();
                         return;
                     } else {
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         return;
                     }
@@ -106,12 +109,12 @@ class ManipulateMe : public HandleDisplay
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_y = my_y - 1;
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         erase_me();
                         return;
                     } else {
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         return;
                     }
@@ -124,18 +127,18 @@ class ManipulateMe : public HandleDisplay
                         }
                         mvaddch(my_y, my_x, ' ');
                         my_x = my_x + 1;
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         erase_me();
                         return;
                     } else {
-                        mvaddch(my_y, my_x, '@');
+                        mvaddch(my_y, my_x, symbol);
                         refresh();
                         return;
                     }
                     break;
                 default:
-                    mvaddch(my_y, my_x, '@');
+                    mvaddch(my_y, my_x, symbol);
                     refresh();
                     return;
                     break;
@@ -157,7 +160,7 @@ class ManipulateMe : public HandleDisplay
     }
 
     void draw_me(void) {
-        mvaddch(my_y, my_x, '@');
+        mvaddch(my_y, my_x, symbol);
         refresh();
     }
 };

@@ -14,7 +14,7 @@ class GameAI {
   private:
   public:
     std::vector<std::tuple<int, int>> generate_positions(std::vector<std::vector<char> > arr, int maxlines, int maxcols, std::tuple<int, int> my_position) {
-      int generate_times = 8;
+      int generate_times = 2;
       std::vector<std::tuple<int, int>> positions;
 
       for (int i = 0; i < generate_times; i++) {
