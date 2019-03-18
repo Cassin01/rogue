@@ -23,3 +23,6 @@ Press ``q`` or ``Q``
 
 # forced termination (ゲームの強制終了)
 Press ``CTRL-z`` or ``CTRL-c``
+
+# 参考
+夢枕獏 上弦の月を喰べる獅子
