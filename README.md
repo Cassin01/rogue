@@ -8,7 +8,7 @@ A Rogue like game
 ## Compile and Run
 
 ```c++
-clang++ main.cpp -lcurses -std=c++14 && ./a.out
+clang++ main.cpp -lcurses -std=c++17 && ./a.out
 ```
 
 ## Commands (コマンド)
