@@ -15,12 +15,15 @@ clang++ main.cpp -lcurses -std=c++14 && ./a.out
 ## Commands (コマンド)
 ### Move (移動)
 
-| Direciton | Key |
-|-----------|-----|
-|Up         | w   |
-|Down       | s   |
-|Left       | a   |
-|Right      | d   |
+h 	左へ1歩移動する。
+j 	下へ1歩移動する。
+k 	上へ1歩移動する。
+l 	右へ1歩移動する。
+y 	左上へ1歩移動する。
+u 	右上へ1歩移動する。
+b 	左下へ1歩移動する。
+n 	右下へ1歩移動する。
+
 
 ### Quit (ゲームの終了)
 Press ``q`` or ``Q``
