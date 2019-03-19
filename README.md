@@ -1,6 +1,10 @@
 # 真夏の夜のサンサーラ
 A Rogue like game
 
+![png00](https://github.com/Cassin01/rogue/blob/images/00.png)
+![png02](https://github.com/Cassin01/rogue/blob/images/02.png)
+![png03](https://github.com/Cassin01/rogue/blob/images/03.png)
+
 ## Compile and Run
 
 ```c++
