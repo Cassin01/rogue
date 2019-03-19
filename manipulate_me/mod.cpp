@@ -76,10 +76,11 @@ class ManipulateMe : public HandleDisplay
             }
         }
 
-        //bool is_enemy_position(std::vector<std::tuple<int, int> > enemy_positions, int emulated_y, int emulated_x) {
         bool is_enemy_position(std::vector<ManipulateMe> enemy_objects, int emulated_y, int emulated_x) {
             for (auto &enemy_object: enemy_objects) {
                 if (enemy_object.my_y == emulated_y && enemy_object.my_x == emulated_x) {
+                    mvaddch(enemy_object.my_y, enemy_object.my_x, enemy_object.symbol);
+                    refresh();
                     return true;
                 }
             }
@@ -127,6 +128,24 @@ class ManipulateMe : public HandleDisplay
                 return false;
             }
         }
+
+        std::tuple<int, int> up_date(int my_y, int my_x, std::vector<std::vector<char> > arr, int new_y, int new_x, int maxlines, int maxcols) {
+            if (new_y > 0 &&  new_y < maxlines && new_x > 0 && new_x < maxcols && on_land(arr, new_y, new_x)) {
+                if (arr[my_y][my_x] == '+' && arr[new_y][new_x] == '#') {
+                    erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                }
+                mvaddch(my_y, my_x, arr[my_y][my_x]);
+                refresh();
+                mvaddch(new_y, new_x, symbol);
+                refresh();
+                return {new_y, new_x};
+            } else {
+                mvaddch(my_y, my_x, symbol);
+                refresh();
+                return {my_y, my_x};
+            }
+        }
+
         RoomSize compute_size_of_room_that_you_in(std::vector<std::vector<char> > arr, int y, int x, int maxlines, int maxcols) {
             RoomSize room_size;
             for (int yi = y; yi >= 0; yi--) {
@@ -156,8 +175,6 @@ class ManipulateMe : public HandleDisplay
             return room_size;
         }
 
-
-//        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::tuple<int, int>> enemy_positions)
         void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects)
         {
             RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y, at_x, maxlines, maxcols);
@@ -165,12 +182,7 @@ class ManipulateMe : public HandleDisplay
             {
                 for (int j = room_size.x; j < room_size.diagonal_x + 1; j++)
                 {
-                    if (is_enemy_position(enemy_objects, i, j))
-                    {
-                        mvaddch(i, j, 'A');
-                        refresh();
-                    }
-                    else
+                    if (!is_enemy_position(enemy_objects, i, j))
                     {
                         mvaddch(i, j, arr[i][j]);
                         refresh();
@@ -180,157 +192,34 @@ class ManipulateMe : public HandleDisplay
         }
 
         void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
-            //HandleDisplay handle_display;
             switch (ch) {
                 case 'h': // 左
-                    if (0 < my_x - 1 && on_land(arr, my_y, my_x - 1))
-                    {
-                        if (arr[my_y][my_x] == '+' && arr[my_y][my_x - 1] == '#') {
-                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_x = my_x - 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols);
                     break;
                 case 'j': // 下
-                    if (maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x))
-                    {
-                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x] == '#') {
-                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y + 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols);
                     break;
                 case 'k': // 上
-                    if (0 < my_y - 1 && on_land(arr, my_y - 1, my_x))
-                    {
-                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x] == '#') {
-                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y - 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols);
                     break;
                 case 'l': // 右
-                    if (maxcols > my_x + 1 && on_land(arr, my_y, my_x + 1))
-                    {
-                        if (arr[my_y][my_x] == '+' && arr[my_y][my_x + 1] == '#') {
-                            //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_x = my_x + 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols);
                     break;
                 case 'n': // 右下
-                    if (maxcols > my_x + 1 && maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x + 1)) {
-                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x + 1] == '#') {
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y + 1;
-                        my_x = my_x + 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols);
                     break;
                 case 'b': // 左下
-                    if (my_y + 1 < maxlines && my_x - 1 > 0 && on_land(arr, my_y + 1, my_x - 1)) {
-                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x - 1] == '#') {
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y + 1;
-                        my_x = my_x - 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols);
                     break;
                 case 'u': // 右上
-                    if (my_y - 1 > 0 && my_x + 1 < maxcols && on_land(arr, my_y - 1, my_x + 1)) {
-                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x + 1] == '#') {
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y - 1;
-                        my_x = my_x + 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols);
                     break;
                 case 'y': // 左上
-                    if (my_y - 1 > 0 && my_x - 1 > 0 && on_land(arr, my_y - 1, my_x - 1)) {
-                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x - 1] == '#') {
-                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                        }
-                        mvaddch(my_y, my_x, arr[my_y][my_x]);
-                        refresh();
-                        my_y = my_y - 1;
-                        my_x = my_x - 1;
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                    } else {
-                        mvaddch(my_y, my_x, symbol);
-                        refresh();
-                        return;
-                    }
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols);
                     break;
                 default:
                     mvaddch(my_y, my_x, symbol);
                     refresh();
-                    return;
                     break;
             }
         }
@@ -356,8 +245,6 @@ class ManipulateMe : public HandleDisplay
             }
         }
 
-
-    //std::vector<std::vector<char> > operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch) {
     std::vector<ManipulateMe> operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch, std::vector<ManipulateMe> enemy_objects) {
         if (arr[my_y][my_x] == '+') {
             display(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
@@ -376,5 +263,47 @@ class ManipulateMe : public HandleDisplay
     void draw_me(void) {
         mvaddch(my_y, my_x, symbol);
         refresh();
+    }
+
+    void operation_in_one_turn_for_enemy(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
+        int direction = std::rand() % 9;
+        switch (direction) {
+            case 0: // 左
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols);
+                break;
+            case 1: // 下
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols);
+                break;
+            case 2: // 上
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols);
+                break;
+            case 3: // 右
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols);
+                break;
+            case 4: // 右下
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols);
+                break;
+            case 5: // 左下
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols);
+                break;
+            case 6: // 右上
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols);
+                break;
+            case 7: // 左上
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols);
+                break;
+            default: // 動かない
+                mvaddch(my_y, my_x, symbol);
+                refresh();
+                break;
+        }
+        return;
+    }
+
+    std::vector<ManipulateMe> operation_in_one_turn_for_enemys(std::vector<std::vector<char> > arr, int maxlines, int maxcols, std::vector<ManipulateMe> enemys) {
+        for (auto &enemy: enemys) {
+            enemy.operation_in_one_turn_for_enemy(arr, maxlines, maxcols);
+        }
+        return enemys;
     }
 };

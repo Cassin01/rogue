@@ -141,6 +141,7 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
         int tmp_under_foot = arr[tmp_y][tmp_x];
         enemy_objects.push_back(ManipulateMe(tmp_y, tmp_x, 'A', tmp_under_foot));
     }
+
     // Start draw
     manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_objects);
 
@@ -156,9 +157,11 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
             int ch_in = getch();
             for (int i = 0; i < is_num(ch); i++) {
                 manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch_in, enemy_objects);
+                enemy_objects = manipulate_me.operation_in_one_turn_for_enemys(arr, maxlines, maxcols, enemy_objects);
             }
         } else {
             manipulate_me.operation_in_one_turn(arr, maxlines, maxcols, ch, enemy_objects);
+            enemy_objects = manipulate_me.operation_in_one_turn_for_enemys(arr, maxlines, maxcols, enemy_objects);
         }
     }
 }
