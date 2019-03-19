@@ -14,8 +14,6 @@ class ManipulateMe : public HandleDisplay
         };
         int my_x;
         int my_y;
-        int my_previous_x;
-        int my_previous_y;
         char under_foot;
         char symbol;
         void erase_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
@@ -95,8 +93,7 @@ class ManipulateMe : public HandleDisplay
 
         // コンストラクタ
         ManipulateMe(int y, int x, char  symbol0, char under_foot0) :
-            my_y(y), my_x(x), symbol(symbol0), under_foot(under_foot0),
-            my_previous_y(y),  my_previous_x(x) {}
+            my_y(y), my_x(x), symbol(symbol0), under_foot(under_foot0) {}
 
         // コピーコンストラクタ // Vectorにこのクラスのオブジェクトを入れるのに必要
         ManipulateMe(const ManipulateMe &manipulate_me) :
@@ -109,18 +106,6 @@ class ManipulateMe : public HandleDisplay
 
         int get_my_y() {
             return my_y;
-        }
-
-        void erase_me()
-        {
-            mvaddch(my_previous_y, my_previous_x, under_foot);
-            refresh();
-        }
-
-        void update_me(std::vector<std::vector<char> > arr)  {
-            under_foot = arr[my_y][my_x];
-            my_previous_y = my_y;
-            my_previous_x = my_x;
         }
 
         void spawn_at_room(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
@@ -197,18 +182,18 @@ class ManipulateMe : public HandleDisplay
         void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
             //HandleDisplay handle_display;
             switch (ch) {
-                case 'a': // 左
+                case 'h': // 左
                     if (0 < my_x - 1 && on_land(arr, my_y, my_x - 1))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y][my_x - 1] == '#') {
                             //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
                             erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
-                        mvaddch(my_y, my_x, ' ');
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
                         my_x = my_x - 1;
                         mvaddch(my_y, my_x, symbol);
                         refresh();
-                        erase_me();
                         return;
                     } else {
                         mvaddch(my_y, my_x, symbol);
@@ -216,18 +201,18 @@ class ManipulateMe : public HandleDisplay
                         return;
                     }
                     break;
-                case 's': // 下
+                case 'j': // 下
                     if (maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x] == '#') {
                             //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
                             erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
-                        mvaddch(my_y, my_x, ' ');
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
                         my_y = my_y + 1;
                         mvaddch(my_y, my_x, symbol);
                         refresh();
-                        erase_me();
                         return;
                     } else {
                         mvaddch(my_y, my_x, symbol);
@@ -235,18 +220,18 @@ class ManipulateMe : public HandleDisplay
                         return;
                     }
                     break;
-                case 'w': // 上
+                case 'k': // 上
                     if (0 < my_y - 1 && on_land(arr, my_y - 1, my_x))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x] == '#') {
                             //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
                             erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
-                        mvaddch(my_y, my_x, ' ');
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
                         my_y = my_y - 1;
                         mvaddch(my_y, my_x, symbol);
                         refresh();
-                        erase_me();
                         return;
                     } else {
                         mvaddch(my_y, my_x, symbol);
@@ -254,19 +239,88 @@ class ManipulateMe : public HandleDisplay
                         return;
                     }
                     break;
-                case 'd': // 右
+                case 'l': // 右
                     if (maxcols > my_x + 1 && on_land(arr, my_y, my_x + 1))
                     {
                         if (arr[my_y][my_x] == '+' && arr[my_y][my_x + 1] == '#') {
                             //handle_display.erase_floor(arr, my_y, my_x, maxlines, maxcols);
                             erase_floor(arr, my_y, my_x, maxlines, maxcols);
                         }
-                        mvaddch(my_y, my_x, ' ');
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
                         my_x = my_x + 1;
                         mvaddch(my_y, my_x, symbol);
                         refresh();
-                        erase_me();
                         return;
+                    } else {
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                        return;
+                    }
+                    break;
+                case 'n': // 右下
+                    if (maxcols > my_x + 1 && maxlines > my_y + 1 && on_land(arr, my_y + 1, my_x + 1)) {
+                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x + 1] == '#') {
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
+                        my_y = my_y + 1;
+                        my_x = my_x + 1;
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                        return;
+                    } else {
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                        return;
+                    }
+                    break;
+                case 'b': // 左下
+                    if (my_y + 1 < maxlines && my_x - 1 > 0 && on_land(arr, my_y + 1, my_x - 1)) {
+                        if (arr[my_y][my_x] == '+' && arr[my_y + 1][my_x - 1] == '#') {
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
+                        my_y = my_y + 1;
+                        my_x = my_x - 1;
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                    } else {
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                        return;
+                    }
+                    break;
+                case 'u': // 右上
+                    if (my_y - 1 > 0 && my_x + 1 < maxcols && on_land(arr, my_y - 1, my_x + 1)) {
+                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x + 1] == '#') {
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
+                        my_y = my_y - 1;
+                        my_x = my_x + 1;
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                    } else {
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
+                        return;
+                    }
+                    break;
+                case 'y': // 左上
+                    if (my_y - 1 > 0 && my_x - 1 > 0 && on_land(arr, my_y - 1, my_x - 1)) {
+                        if (arr[my_y][my_x] == '+' && arr[my_y - 1][my_x - 1] == '#') {
+                            erase_floor(arr, my_y, my_x, maxlines, maxcols);
+                        }
+                        mvaddch(my_y, my_x, arr[my_y][my_x]);
+                        refresh();
+                        my_y = my_y - 1;
+                        my_x = my_x - 1;
+                        mvaddch(my_y, my_x, symbol);
+                        refresh();
                     } else {
                         mvaddch(my_y, my_x, symbol);
                         refresh();
@@ -308,8 +362,6 @@ class ManipulateMe : public HandleDisplay
         if (arr[my_y][my_x] == '+') {
             display(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
         }
-        // 自分がいる場所を'いた場所'に記録する
-        update_me(arr);
 
         // ユーザーからのコマンドを受け取り駒を進める
         emulate(ch, maxlines, maxcols, arr);
