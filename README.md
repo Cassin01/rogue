@@ -1,7 +1,7 @@
 # 真夏の夜のサンサーラ
 A Rogue like game
 
-![プレイ画面1](https://github.com/Cassin01/rogue/blob/images/01.png)
+![プレイ画面1](https://github.com/Cassin01/rogue/blob/images/00.png)
 ![プレイ画面2](https://github.com/Cassin01/rogue/blob/images/02.png)
 ![プレイ画面3](https://github.com/Cassin01/rogue/blob/images/03.png)
 
@@ -15,12 +15,17 @@ clang++ main.cpp -lcurses -std=c++14 && ./a.out
 ## Commands (コマンド)
 ### Move (移動)
 
-| Direciton | Key |
-|-----------|-----|
-|Up         | w   |
-|Down       | s   |
-|Left       | a   |
-|Right      | d   |
+|コマンド|意味|
+|-|-|
+|h| 	左へ1歩移動する。|
+|j| 	下へ1歩移動する。|
+|k| 	上へ1歩移動する。|
+|l| 	右へ1歩移動する。|
+|y| 	左上へ1歩移動する。|
+|u| 	右上へ1歩移動する。|
+|b| 	左下へ1歩移動する。|
+|n| 	右下へ1歩移動する。|
+
 
 ### Quit (ゲームの終了)
 Press ``q`` or ``Q``
