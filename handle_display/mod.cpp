@@ -4,7 +4,7 @@
 
 class HandleDisplay {
     private:
-        void serch(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::vector<bool> > visited) {
+        void serch(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<std::vector<bool> > visited) const {
             if ((arr[at_y][at_x] == '#' || arr[at_y][at_x] == '+') && visited[at_y][at_x] == false) {
                 visited[at_y][at_x] = true;
                 mvaddch(at_y, at_x, arr[at_y][at_x]);
@@ -32,7 +32,7 @@ class HandleDisplay {
             }
         }
     public:
-        void serch_and_display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+        void serch_and_display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) const {
             // 上
             if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '#') {
                 mvaddch(at_y - 1, at_x, arr[at_y - 1][at_x]);

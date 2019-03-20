@@ -1,5 +1,6 @@
 #include <curses.h>
 #include <vector>
+#include <functional>
 #include "../handle_display/mod.cpp"
 
 class ManipulateMe : public HandleDisplay
@@ -16,7 +17,8 @@ class ManipulateMe : public HandleDisplay
         int my_y;
         char under_foot;
         char symbol;
-        void erase_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+
+        static void erase_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
             if (arr[at_y][at_x] == '+') {
                 // 上
                 if (at_y - 1 >= 0) {
@@ -43,10 +45,22 @@ class ManipulateMe : public HandleDisplay
                     }
                 }
             }
-
         }
 
-        void erase_rooms_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+        static void draw_char(int y, int x, char ch) {
+            mvaddch(y, x, ch);
+            refresh();
+        }
+
+        static void do_nothing(int, int , char) {};
+        static void erase_floor_main(int y, int x, int new_y, int new_x, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
+            if (arr[y][x] == '+' && arr[new_y][new_x] == '#') {
+                erase_floor(arr, y, x, maxlines, maxcols);
+            }
+        }
+        static void do_nothing_to_floor(int, int, int, int, int, int, std::vector<std::vector<char> >) {};
+
+        static void erase_rooms_floor(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
             if (arr[at_y][at_x] == '.') {
                 RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
                 for (int i = room_size.y + 1; i < room_size.diagonal_y; i++) {
@@ -121,7 +135,7 @@ class ManipulateMe : public HandleDisplay
             }
         }
 
-        bool on_land(std::vector<std::vector<char> > arr, int y, int x) {
+        static bool on_land(std::vector<std::vector<char> > arr, int y, int x) {
             if (arr[y][x] == '#' || arr[y][x] == '.' || arr[y][x] == '+') {
                 return true;
             } else {
@@ -129,24 +143,25 @@ class ManipulateMe : public HandleDisplay
             }
         }
 
-        std::tuple<int, int> up_date(int my_y, int my_x, std::vector<std::vector<char> > arr, int new_y, int new_x, int maxlines, int maxcols) {
+
+        std::tuple<int, int> up_date(
+            int my_y, int my_x, std::vector<std::vector<char> > arr,
+            int new_y, int new_x, int maxlines, int maxcols,
+            std::function<void(int, int, char)> fn_for_draw,
+            std::function<void(int, int, int, int, int, int,
+            std::vector<std::vector<char> >)> erase_f) const {
             if (new_y > 0 &&  new_y < maxlines && new_x > 0 && new_x < maxcols && on_land(arr, new_y, new_x)) {
-                if (arr[my_y][my_x] == '+' && arr[new_y][new_x] == '#') {
-                    erase_floor(arr, my_y, my_x, maxlines, maxcols);
-                }
-                mvaddch(my_y, my_x, arr[my_y][my_x]);
-                refresh();
-                mvaddch(new_y, new_x, symbol);
-                refresh();
+                erase_f(my_y, my_x, new_y, new_x, maxlines, maxcols, arr);
+                fn_for_draw(my_y, my_x, arr[my_y][my_x]);
+                fn_for_draw(new_y, new_x, symbol);
                 return {new_y, new_x};
             } else {
-                mvaddch(my_y, my_x, symbol);
-                refresh();
+                fn_for_draw(my_y, my_x, symbol);
                 return {my_y, my_x};
             }
         }
 
-        RoomSize compute_size_of_room_that_you_in(std::vector<std::vector<char> > arr, int y, int x, int maxlines, int maxcols) {
+        static RoomSize compute_size_of_room_that_you_in(std::vector<std::vector<char> > arr, int y, int x, int maxlines, int maxcols) {
             RoomSize room_size;
             for (int yi = y; yi >= 0; yi--) {
                 room_size.y = yi;
@@ -194,32 +209,31 @@ class ManipulateMe : public HandleDisplay
         void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
             switch (ch) {
                 case 'h': // 左
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'j': // 下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'k': // 上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'l': // 右
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'n': // 右下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'b': // 左下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'u': // 右上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 case 'y': // 左上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols);
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
                 default:
-                    mvaddch(my_y, my_x, symbol);
-                    refresh();
+                    draw_char(my_y, my_x, symbol);
                     break;
             }
         }
@@ -248,6 +262,8 @@ class ManipulateMe : public HandleDisplay
     std::vector<ManipulateMe> operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch, std::vector<ManipulateMe> enemy_objects) {
         if (arr[my_y][my_x] == '+') {
             display(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
+        } else if (arr[my_y][my_x] == '.') {
+            display_room(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
         }
 
         // ユーザーからのコマンドを受け取り駒を進める
@@ -260,7 +276,7 @@ class ManipulateMe : public HandleDisplay
         return enemy_objects;
     }
 
-    void draw_me(void) {
+    void draw_me(void) const {
         mvaddch(my_y, my_x, symbol);
         refresh();
     }
@@ -269,32 +285,30 @@ class ManipulateMe : public HandleDisplay
         int direction = std::rand() % 9;
         switch (direction) {
             case 0: // 左
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 1: // 下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 2: // 上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 3: // 右
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 4: // 右下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 5: // 左下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 6: // 右上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             case 7: // 左上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols);
+                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
                 break;
             default: // 動かない
-                mvaddch(my_y, my_x, symbol);
-                refresh();
                 break;
         }
         return;
