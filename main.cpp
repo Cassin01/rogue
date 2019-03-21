@@ -12,12 +12,12 @@
 #include <iostream>
 #include <string>
 
-#include "map.cpp"
+#include "map/map.cpp"
 #include "manipulate_me/mod.cpp"
 #include "game_ai/mod.cpp"
 
 // 文章ファイル読み込み
-#include "read_text.cpp"
+#include "read_text/read_text.cpp"
 
 void init_curses() {
     // Start curses mode
