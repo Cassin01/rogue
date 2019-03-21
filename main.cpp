@@ -143,7 +143,7 @@ void game_main_stream(int windows_maxlines, int windows_maxcols) {
     }
 
     // Start draw
-    manipulate_me.display_room(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_objects);
+    manipulate_me.display_room_main(arr, manipulate_me.get_my_y(), manipulate_me.get_my_x(), maxlines, maxcols, enemy_objects);
 
     // add '@'
     manipulate_me.draw_me();

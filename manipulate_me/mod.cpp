@@ -65,42 +65,35 @@ class ManipulateMe : public HandleDisplay
                 RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
                 for (int i = room_size.y + 1; i < room_size.diagonal_y; i++) {
                     for (int j = room_size.x + 1; j < room_size.diagonal_x; j++) {
-                            mvaddch(i, j, ' ');
-                            refresh();
+                        draw_char(i, j, ' ');
                     }
                 }
             }
         }
 
-        void display_rooms_wall(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) {
+        void display_rooms_wall(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols) const {
             if (arr[at_y][at_x] == '.') {
                 RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y,  at_x,  maxlines, maxcols);
                 for (int i = room_size.x; i < room_size.diagonal_x + 1; i++) {
-                        mvaddch(room_size.y, i, arr[room_size.y][i]);
-                        refresh();
-                        mvaddch(room_size.diagonal_y, i, arr[room_size.diagonal_y][i]);
-                        refresh();
+                        draw_char(room_size.y, i, arr[room_size.y][i]);
+                        draw_char(room_size.diagonal_y, i, arr[room_size.diagonal_y][i]);
                 }
                 for (int i = room_size.y; i < room_size.diagonal_y + 1; i++) {
-                    mvaddch(i, room_size.x, arr[i][room_size.x]);
-                    refresh();
-                    mvaddch(i, room_size.diagonal_x, arr[i][room_size.diagonal_x]);
-                    refresh();
+                    draw_char(i, room_size.x, arr[i][room_size.x]);
+                    draw_char(i, room_size.diagonal_x, arr[i][room_size.diagonal_x]);
                 }
             }
         }
 
-        bool is_enemy_position(std::vector<ManipulateMe> enemy_objects, int emulated_y, int emulated_x) {
-            for (auto &enemy_object: enemy_objects) {
-                if (enemy_object.my_y == emulated_y && enemy_object.my_x == emulated_x) {
-                    mvaddch(enemy_object.my_y, enemy_object.my_x, enemy_object.symbol);
-                    refresh();
+        static bool is_enemy(const std::vector<ManipulateMe> enemy_objects, const int y, const int x) {
+            for (auto enemy_object: enemy_objects) {
+                if (enemy_object.my_y == y && enemy_object.my_x == x) {
+                    draw_char(enemy_object.my_y, enemy_object.my_x, enemy_object.symbol);
                     return true;
                 }
             }
             return false;
         }
-
     public:
         // デフォルトコンストラクタ // Vectorにこのクラスのオブジェクトを入れる必要
         ManipulateMe() :
@@ -190,123 +183,277 @@ class ManipulateMe : public HandleDisplay
             return room_size;
         }
 
-        void display_room(std::vector<std::vector<char>> arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects)
-        {
+        static void display_room_main(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects) {
             RoomSize room_size = compute_size_of_room_that_you_in(arr, at_y, at_x, maxlines, maxcols);
+            display_room(room_size, arr, maxlines, maxcols);
+            display_enemys_in_room(room_size, enemy_objects);
+        }
+
+        static void display_room(RoomSize room_size, std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
             for (int i = room_size.y; i < room_size.diagonal_y + 1; i++)
             {
                 for (int j = room_size.x; j < room_size.diagonal_x + 1; j++)
                 {
-                    if (!is_enemy_position(enemy_objects, i, j))
-                    {
-                        mvaddch(i, j, arr[i][j]);
-                        refresh();
-                    }
+                    mvaddch(i, j, arr[i][j]);
+                    refresh();
                 }
             }
         }
 
-        void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr) {
+        static void display_enemys_in_room(RoomSize room_size, std::vector<ManipulateMe> enemy_objects) {
+            for (auto enemy_object: enemy_objects) {
+                if (enemy_object.my_y >= room_size.y &&
+                    enemy_object.my_y <= room_size.diagonal_y &&
+                    enemy_object.my_x >= room_size.x &&
+                    enemy_object.my_x <= room_size.diagonal_x ) {
+                    mvaddch(enemy_object.my_y, enemy_object.my_x, enemy_object.symbol);
+                    refresh();
+                }
+            }
+        }
+
+        void emulate(char ch, int maxlines, int maxcols, std::vector<std::vector<char> > arr, std::vector<ManipulateMe> npcs) {
             switch (ch) {
                 case 'h': // 左
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y, my_x - 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    }
                     break;
                 case 'j': // 下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y + 1, my_x)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'k': // 上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y - 1, my_x)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'l': // 右
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y, my_x + 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'n': // 右下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y + 1, my_x + 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'b': // 左下
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y + 1, my_x - 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'u': // 右上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y - 1, my_x + 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 case 'y': // 左上
-                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
+                    if (!duplicate_npcs_and_player(npcs, my_y - 1, my_x - 1)) {
+                        std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::draw_char, ManipulateMe::erase_floor_main);
                     break;
+                    }
                 default:
                     draw_char(my_y, my_x, symbol);
                     break;
             }
         }
 
-        void display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects) {
+        void display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects) const {
             if (arr[at_y][at_x] == '+') {
                 // 上
                 if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '.') {
-                    display_room(arr, at_y - 1, at_x, maxlines, maxcols, enemy_objects);
+                    display_room_main(arr, at_y - 1, at_x, maxlines, maxcols, enemy_objects);
                 }
                 // 下
                 else if (at_y + 1 < maxlines - 1 && arr[at_y + 1][at_x] == '.') {
-                    display_room(arr, at_y + 1, at_x, maxlines, maxcols, enemy_objects);
+                    display_room_main(arr, at_y + 1, at_x, maxlines, maxcols, enemy_objects);
                 }
                 // 右
                 else if (at_x - 1 >= 0 && arr[at_y][at_x - 1] == '.') {
-                    display_room(arr, at_y, at_x - 1, maxlines, maxcols, enemy_objects);
+                    display_room_main(arr, at_y, at_x - 1, maxlines, maxcols, enemy_objects);
                 }
                 // 左
                 else if (at_x + 1 < maxcols - 1 && arr[at_y][at_x + 1] == '.') {
-                    display_room(arr, at_y, at_x + 1, maxlines, maxcols, enemy_objects);
+                    display_room_main(arr, at_y, at_x + 1, maxlines, maxcols, enemy_objects);
                 }
             }
         }
 
-    std::vector<ManipulateMe> operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch, std::vector<ManipulateMe> enemy_objects) {
-        if (arr[my_y][my_x] == '+') {
-            display(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
-        } else if (arr[my_y][my_x] == '.') {
-            display_room(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
+        static void serch_and_display(std::vector<std::vector<char> > arr, int at_y, int at_x, int maxlines, int maxcols, std::vector<ManipulateMe> enemy_objects)  {
+
+            // 上
+            if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '#') {
+                draw_char(at_y - 1, at_x, arr[at_y - 1][at_x]);
+                is_enemy(enemy_objects, at_y - 1, at_x);
+            }
+            // 下
+            if (at_y + 1 < maxlines - 1 && arr[at_y + 1][at_x] == '#') {
+                draw_char(at_y + 1, at_x, arr[at_y + 1][at_x]);
+                is_enemy(enemy_objects, at_y + 1, at_x);
+            }
+            // 右
+            if (at_x - 1 >= 0 && arr[at_y][at_x - 1] == '#') {
+                draw_char(at_y, at_x - 1, arr[at_y][at_x - 1]);
+                is_enemy(enemy_objects, at_y, at_x - 1);
+
+            }
+            // 左
+            if (at_x + 1 < maxcols - 1 && arr[at_y][at_x + 1] == '#') {
+                draw_char(at_y, at_x + 1, arr[at_y][at_x + 1]);
+                is_enemy(enemy_objects, at_y, at_x + 1);
+            }
         }
 
-        // ユーザーからのコマンドを受け取り駒を進める
-        emulate(ch, maxlines, maxcols, arr);
-
-        if (arr[my_y][my_x] == '#') {
-            // プレイヤーの周囲一マスに進める場所があれば表示する
-            serch_and_display(arr, my_y,  my_x, maxlines, maxcols);
+        static void serch_and_erase_npc(const std::vector<std::vector<char> > arr, const int at_y, const int at_x, const int maxlines, const int maxcols, const std::vector<ManipulateMe> enemy_objects) {
+            // 上
+            if (at_y - 1 >= 0 && arr[at_y - 1][at_x] == '#')
+            {
+                draw_char(at_y - 1, at_x, arr[at_y - 1][at_x]);
+            }
+            // 下
+            if (at_y + 1 < maxlines - 1 && arr[at_y + 1][at_x] == '#')
+            {
+                draw_char(at_y + 1, at_x, arr[at_y + 1][at_x]);
+            }
+            // 右
+            if (at_x - 1 >= 0 && arr[at_y][at_x - 1] == '#')
+            {
+                draw_char(at_y, at_x - 1, arr[at_y][at_x - 1]);
+            }
+            // 左
+            if (at_x + 1 < maxcols - 1 && arr[at_y][at_x + 1] == '#')
+            {
+                draw_char(at_y, at_x + 1, arr[at_y][at_x + 1]);
+            }
         }
-        return enemy_objects;
-    }
 
-    void draw_me(void) const {
-        mvaddch(my_y, my_x, symbol);
-        refresh();
-    }
 
-    void operation_in_one_turn_for_enemy(std::vector<std::vector<char> > arr, int maxlines, int maxcols) {
-        int direction = std::rand() % 9;
+        std::vector<ManipulateMe> operation_in_one_turn(std::vector<std::vector<char> > arr, int maxlines, int maxcols, char ch, std::vector<ManipulateMe> enemy_objects) {
+            if (arr[my_y][my_x] == '+') {
+                display(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
+            } else if (arr[my_y][my_x] == '.') {
+                display_room_main(arr, my_y, my_x, maxlines, maxcols, enemy_objects);
+            } else if (arr[my_y][my_x] == '#') {
+                serch_and_erase_npc(arr, my_y,  my_x, maxlines, maxcols, enemy_objects);
+            }
+
+            // ユーザーからのコマンドを受け取り駒を進める
+            emulate(ch, maxlines, maxcols, arr, enemy_objects);
+
+            if (arr[my_y][my_x] == '#') {
+                // プレイヤーの周囲一マスに進める場所があれば表示する
+                serch_and_display(arr, my_y,  my_x, maxlines, maxcols, enemy_objects);
+            }
+            return enemy_objects;
+        }
+
+        void draw_me(void) const {
+            mvaddch(my_y, my_x, symbol);
+            refresh();
+        }
+
+        int npc_find_player(int opponent_y, int opponent_x)
+        const {
+            if (opponent_y < my_y) {
+                if (opponent_x < my_x) {
+                    // 左上
+                    return 7;
+                }
+                if (opponent_x == my_x) {
+                    // 上
+                    return 2;
+                } else {
+                    // 右上
+                    return 6;
+                }
+            } else if (opponent_y == my_y) {
+                if (opponent_x < my_x) {
+                    // 左
+                    return 0;
+                }
+                if (opponent_x == my_x) {
+                    // 真ん中
+                    return 8;
+                } else {
+                    // 右
+                    return 3;
+                }
+            } else {
+                if (opponent_x < my_x) {
+                    // 左下
+                    return 5;
+                }
+                if (opponent_x == my_x) {
+                    // 下
+                    return 1;
+                } else {
+                    // 右下
+                    return 4;
+                }
+            }
+        }
+
+        bool duplicate(int y0, int x0, int y1, int x1) const {
+            if (y0 == y1 && x0 == x1) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        static bool duplicate_npcs_and_player(const std::vector<ManipulateMe> npcs, const int y, const int x) {
+            for (auto npc: npcs) {
+                if (npc.my_x == x && npc.my_y == y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void operation_in_one_turn_for_enemy(std::vector<std::vector<char>> arr, int maxlines, int maxcols, int direction, int player_y, int player_x, std::vector<ManipulateMe> npcs)
+    {
         switch (direction) {
             case 0: // 左
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y, my_x - 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y, my_x - 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 1: // 下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y + 1, my_x, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y + 1, my_x)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 2: // 上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y - 1, my_x, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y - 1, my_x)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 3: // 右
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y, my_x + 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y, my_x + 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 4: // 右下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y + 1, my_x + 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y + 1, my_x + 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 5: // 左下
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y + 1, my_x - 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y + 1, my_x - 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y + 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 6: // 右上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y - 1, my_x + 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y - 1, my_x + 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x + 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             case 7: // 左上
-                std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                if (!duplicate(my_y - 1, my_x - 1, player_y, player_x) && !duplicate_npcs_and_player(npcs, my_y - 1, my_x - 1)) {
+                    std::tie(my_y, my_x) = up_date(my_y, my_x, arr, my_y - 1, my_x - 1, maxlines, maxcols, ManipulateMe::do_nothing, ManipulateMe::do_nothing_to_floor);
+                }
                 break;
             default: // 動かない
                 break;
@@ -316,7 +463,8 @@ class ManipulateMe : public HandleDisplay
 
     std::vector<ManipulateMe> operation_in_one_turn_for_enemys(std::vector<std::vector<char> > arr, int maxlines, int maxcols, std::vector<ManipulateMe> enemys) {
         for (auto &enemy: enemys) {
-            enemy.operation_in_one_turn_for_enemy(arr, maxlines, maxcols);
+            //enemy.operation_in_one_turn_for_enemy(arr, maxlines, maxcols, std::rand() % 9);
+            enemy.operation_in_one_turn_for_enemy(arr, maxlines, maxcols, enemy.npc_find_player(my_y, my_x), my_y, my_x, enemys);
         }
         return enemys;
     }
